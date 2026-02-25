@@ -44,6 +44,9 @@ class AuthController {
             $password = $_POST['password'];
 
             if ($this->user->login($email, $password)) {
+                // Security: Regenerate session ID to prevent session fixation attacks
+                session_regenerate_id(true);
+                
                 $_SESSION['user_id'] = $this->user->id;
                 $_SESSION['user_name'] = $this->user->name;
                 $_SESSION['user_role'] = $this->user->role;
