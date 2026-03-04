@@ -1,14 +1,52 @@
 CREATE DATABASE IF NOT EXISTS stadium_ticket;
 USE stadium_ticket;
 
+CREATE TABLE roles (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL, -- 'admin', 'stadium_manager', 'staff', 'customer'
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE permissions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL, -- e.g., 'manage_events', 'validate_ticket'
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE role_permissions (
+    role_id INT NOT NULL,
+    permission_id INT NOT NULL,
+    PRIMARY KEY (role_id, permission_id),
+    FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE,
+    FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE
+);
+
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    role_id INT NOT NULL,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     phone VARCHAR(50),
     password VARCHAR(255) NOT NULL,
-    role ENUM('customer', 'staff', 'admin') DEFAULT 'customer',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    status ENUM('active', 'inactive', 'locked') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (role_id) REFERENCES roles(id)
+);
+
+CREATE TABLE audit_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    action VARCHAR(255) NOT NULL,
+    target_type VARCHAR(50), -- e.g., 'event', 'ticket'
+    target_id INT,
+    old_values JSON,
+    new_values JSON,
+    ip_address VARCHAR(45),
+    user_agent TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
 CREATE TABLE venues (
@@ -100,6 +138,27 @@ CREATE TABLE scans (
     FOREIGN KEY (scanned_by) REFERENCES users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE seat_reservations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    seat_id INT NOT NULL,
+    event_id INT NOT NULL,
+    user_id INT NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (seat_id) REFERENCES seats(id) ON DELETE CASCADE,
+    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE(seat_id, event_id) -- Prevent double reservation for the same event
+);
+
+-- Seed Roles
+INSERT INTO roles (name, description) VALUES 
+('super_admin', 'Full system access'),
+('admin', 'General administration'),
+('stadium_manager', 'Manage venues and events'),
+('staff', 'Ticket validation staff'),
+('customer', 'End user/Fan');
+
 -- Insert a default admin user
 -- The password is 'admin123' (hashed using bcrypt)
-INSERT INTO users (name, email, password, role) VALUES ('Admin User', 'admin@example.com', '$2y$10$wTfVn9M3RMgT9N7D7L9t7e6Xf4Yx/z2N3O0tC0F5J8T2K8v3/PzPq', 'admin');
+INSERT INTO users (role_id, name, email, password) VALUES (1, 'Admin User', 'admin@example.com', '$2y$10$wTfVn9M3RMgT9N7D7L9t7e6Xf4Yx/z2N3O0tC0F5J8T2K8v3/PzPq');
