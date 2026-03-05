@@ -1,39 +1,32 @@
-<div class="events-container">
-    <h2 style="text-align:center; margin-bottom:30px;">Available Events</h2>
+<div class="events-container" style="padding-top: 3rem;">
+    <h1 class="gradient-text" style="text-align:center; margin-bottom:4rem; font-size: 3rem;">Epic Events Await</h1>
     
-    <div style="display:flex; flex-wrap:wrap; gap:20px; justify-content:center;">
+    <div style="display:flex; flex-wrap:wrap; gap:3rem; justify-content:center;">
         <?php foreach ($events as $event): ?>
             <?php if($event['status'] == 'scheduled'): ?>
-                <div style="width: 300px; background: #fff; border-radius: 8px; box-shadow: var(--card-shadow); padding: 20px;">
-                    <h3 style="color: var(--primary-color);"><?php echo htmlspecialchars($event['title']); ?></h3>
-                    <p><strong>Venue:</strong> <?php echo htmlspecialchars($event['venue_name']); ?></p>
-                    <p><strong>Date/Time:</strong> <?php echo $event['event_date'] . ' @ ' . $event['start_time']; ?></p>
-                    <hr style="margin: 15px 0;">
+                <div class="glass-card" style="width: 350px; padding: 2rem;">
+                    <h3 class="gradient-text"><?php echo \App\Core\Security::clean($event['title']); ?></h3>
+                    <p style="color: var(--text-secondary); margin: 1rem 0;">
+                        <i class="fa-solid fa-location-dot"></i> <?php echo \App\Core\Security::clean($event['venue_name']); ?><br>
+                        <i class="fa-solid fa-calendar"></i> <?php echo \App\Core\Security::clean($event['event_date']); ?> @ <?php echo \App\Core\Security::clean($event['start_time']); ?>
+                    </p>
                     
-                    <h4>Tickets Available</h4>
-                    <?php if (isset($ticketsByEvent[$event['id']])): ?>
-                        <?php foreach($ticketsByEvent[$event['id']] as $ticket): ?>
-                            <div style="margin-bottom: 10px; padding: 10px; background: var(--light-bg); border-radius: 4px;">
-                                <p><?php echo htmlspecialchars($ticket['name']); ?> - <strong>$<?php echo $ticket['price']; ?></strong></p>
-                                <p style="font-size: 0.85rem; color: var(--text-muted);">Remaining: <?php echo $ticket['quantity_available']; ?></p>
-                                
-                                <?php if($ticket['quantity_available'] > 0): ?>
-                                    <form action="/checkout" method="POST" style="margin-top:10px;">
-                                        <input type="hidden" name="event_id" value="<?php echo $event['id']; ?>">
-                                        <input type="hidden" name="ticket_type_id" value="<?php echo $ticket['id']; ?>">
-                                        <input type="hidden" name="price" value="<?php echo $ticket['price']; ?>">
-                                        <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 0.9em; padding: 8px;" <?php echo !isset($_SESSION['user_id']) ? 'disabled' : ''; ?>>
-                                            <?php echo !isset($_SESSION['user_id']) ? 'Login to Buy' : 'Buy Now (Mock)'; ?>
-                                        </button>
-                                    </form>
-                                <?php else: ?>
-                                    <span style="color: var(--danger); font-weight: bold;">Sold Out</span>
-                                <?php endif; ?>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <p>No tickets listed yet.</p>
-                    <?php endif; ?>
+                    <div class="glass" style="padding: 1rem; border-radius: var(--radius-md);">
+                        <h4 style="font-size: 0.9rem; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 1px;">Pricing</h4>
+                        <?php if (isset($ticketsByEvent[$event['id']])): ?>
+                            <?php foreach($ticketsByEvent[$event['id']] as $ticket): ?>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                    <span style="font-size: 0.9rem;"><?php echo \App\Core\Security::clean($ticket['name']); ?></span>
+                                    <span style="font-weight: 700; color: var(--primary);">$<?php echo $ticket['price']; ?></span>
+                                </div>
+                            <?php endforeach; ?>
+                            <a href="/select-seats?event_id=<?php echo $event['id']; ?>" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+                                Select Seats
+                            </a>
+                        <?php else: ?>
+                            <p style="font-size: 0.8rem; color: var(--text-muted);">No tickets available yet.</p>
+                        <?php endif; ?>
+                    </div>
                 </div>
             <?php endif; ?>
         <?php endforeach; ?>
