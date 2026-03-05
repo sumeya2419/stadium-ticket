@@ -1,39 +1,81 @@
-<div class="customer-dashboard" style="max-width: 800px; margin: 0 auto; padding: 20px;">
-    <h2>My Dashboard</h2>
-    <p>Welcome, <strong><?php echo htmlspecialchars($_SESSION['user_name']); ?></strong>!</p>
-    
-    <div style="margin-top: 30px;">
-        <a href="/events" class="btn btn-primary">Browse More Events</a>
+<div class="dashboard-container" style="padding-top: 3rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4rem;">
+        <div>
+            <h1 class="gradient-text">My Dashboard</h1>
+            <p style="color: var(--text-muted); margin-top: 0.5rem;">Welcome back, <strong><?php echo Security::clean($_SESSION['user_name']); ?></strong></p>
+        </div>
+        <a href="/events" class="btn btn-secondary">
+            <i class="fa-solid fa-plus"></i> Get More Tickets
+        </a>
     </div>
 
-    <h3 style="margin-top: 40px; border-bottom: 2px solid var(--border); padding-bottom: 10px;">My Tickets</h3>
-    
-    <?php if (empty($myOrders)): ?>
-        <p style="margin-top: 20px;">You haven't bought any tickets yet.</p>
-    <?php else: ?>
-        <ul style="list-style: none; padding: 0; margin-top: 20px;">
-            <?php foreach($myOrders as $order): ?>
-                <li style="background: #fff; margin-bottom: 15px; padding: 20px; border-radius: 8px; box-shadow: var(--card-shadow); display: flex; align-items: center; justify-content: space-between;">
-                    
-                    <div>
-                        <h4 style="color: var(--primary-color); margin-bottom: 5px;"><?php echo htmlspecialchars($order['event_title']); ?></h4>
-                        <p style="font-size: 0.9rem; margin-bottom: 5px;"><strong>Date:</strong> <?php echo $order['event_date']; ?></p>
-                        <p style="font-size: 0.9rem;"><strong>Status:</strong> <span style="color: var(--success); text-transform: uppercase;"> <?php echo $order['status']; ?></span> - Paid $<?php echo $order['price']; ?></p>
-                        
+    <div class="tickets-section">
+        <h2 style="margin-bottom: 2rem; font-size: 1.5rem; letter-spacing: 1px;">MY TICKETS</h2>
+        
+        <?php if (empty($myOrders)): ?>
+            <div class="glass-card" style="padding: 6rem 2rem; text-align: center;">
+                <div style="font-size: 4rem; color: var(--bg-glass); margin-bottom: 2rem;">
+                    <i class="fa-solid fa-ticket-simple"></i>
+                </div>
+                <h3 style="margin-bottom: 1rem;">No Tickets Found</h3>
+                <p style="color: var(--text-muted); margin-bottom: 3rem; max-width: 400px; margin-left: auto; margin-right: auto;">
+                    You haven't reserved any match tickets yet. Browse our upcoming events to secure your spot in the stadium!
+                </p>
+                <a href="/events" class="btn btn-primary" style="padding: 1rem 3rem;">
+                    Browse Matches
+                </a>
+            </div>
+        <?php else: ?>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 2rem;">
+                <?php foreach($myOrders as $order): ?>
+                    <div class="glass-card" style="padding: 2rem; position: relative; display: flex; flex-direction: column; justify-content: space-between;">
                         <?php if($order['is_used']): ?>
-                            <p style="margin-top: 5px; color: var(--danger); font-weight: bold; font-size: 0.9rem;">[TICKET USED]</p>
+                            <div class="badge" style="position: absolute; top: 1rem; right: 1rem; background: var(--danger); font-size: 0.7rem;">USED</div>
                         <?php endif; ?>
-                    </div>
-                    
-                    <div style="text-align: center; border-left: 1px dashed var(--border); padding-left: 20px;">
-                       <span style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 5px;">QR Code Token</span>
-                       <!-- We simulate a QR code visually using an external API for the generated token -->
-                       <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=<?php echo $order['qr_code']; ?>" alt="Ticket QR" style="border: 1px solid var(--border); border-radius: 4px; <?php echo $order['is_used'] ? 'opacity: 0.5;' : ''; ?>">
-                       <p style="font-size: 0.65rem; color: #888; max-width: 100px; word-wrap: break-word; margin-top: 5px;"><?php echo substr($order['qr_code'], 0, 15) . '...'; ?></p>
-                    </div>
 
-                </li>
-            <?php endforeach; ?>
-        </ul>
-    <?php endif; ?>
+                        <div>
+                            <h3 style="margin-bottom: 1rem; color: var(--primary);">
+                                <?php echo Security::clean($order['event_title']); ?>
+                            </h3>
+                            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.5rem;">
+                                <i class="fa-solid fa-calendar"></i> <?php echo Security::clean($order['event_date']); ?>
+                            </p>
+                            
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+                                <div>
+                                    <p style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Status</p>
+                                    <span style="font-size: 0.8rem; font-weight: 700; color: <?php echo $order['status'] == 'paid' ? 'var(--success)' : 'var(--accent)'; ?>; text-transform: uppercase;">
+                                        <?php echo Security::clean($order['status']); ?>
+                                    </span>
+                                </div>
+                                <div style="text-align: right;">
+                                    <p style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Price</p>
+                                    <span style="font-weight: 600;">$<?php echo number_format($order['price'], 2); ?></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: auto; padding-top: 1.5rem; border-top: 1px solid var(--border);">
+                            <?php if ($order['status'] == 'pending'): ?>
+                                <a href="/payment?order_id=<?php echo $order['order_id']; ?>" class="btn btn-primary" style="width: 100%;">
+                                    <i class="fa-solid fa-credit-card"></i> Pay Now
+                                </a>
+                            <?php else: ?>
+                                <div style="display: flex; gap: 1rem; align-items: center;">
+                                    <div style="flex-shrink: 0; background: white; padding: 5px; border-radius: 4px;">
+                                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=60x60&data=<?php echo urlencode($order['qr_code']); ?>" alt="QR" style="display: block; width: 60px; height: 60px;">
+                                    </div>
+                                    <div style="flex-grow: 1;">
+                                        <a href="/invoice?order_id=<?php echo $order['order_id']; ?>" class="btn btn-secondary" style="width: 100%; font-size: 0.8rem;">
+                                            <i class="fa-solid fa-receipt"></i> View Invoice
+                                        </a>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+    </div>
 </div>
