@@ -15,7 +15,7 @@ class CheckoutController {
     }
 
     public function checkout() {
-        AuthMiddleware::auth();
+        \App\Middleware\AuthMiddleware::auth();
         
         if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['event_id']) && isset($_POST['ticket_type_id'])) {
             if (!\App\Core\Security::validateCsrfToken($_POST['csrf_token'] ?? '')) {
@@ -53,7 +53,7 @@ class CheckoutController {
      * AJAX Endpoint: Get seats for an event
      */
     public function getSeatsJson() {
-        AuthMiddleware::auth();
+        \App\Middleware\AuthMiddleware::auth();
         $event_id = $_GET['event_id'] ?? null;
         if (!$event_id) {
             echo json_encode(['error' => 'Event ID required']);
@@ -72,7 +72,7 @@ class CheckoutController {
      * AJAX Endpoint: Reserve a seat
      */
     public function reserveSeat() {
-        AuthMiddleware::auth();
+        \App\Middleware\AuthMiddleware::auth();
         $data = json_decode(file_get_contents('php://input'), true);
         $src_seat_id = $data['seat_id'] ?? null;
         $src_event_id = $data['event_id'] ?? null;
@@ -112,7 +112,7 @@ class CheckoutController {
     }
 
     public function showSeatSelection() {
-        AuthMiddleware::auth();
+        \App\Middleware\AuthMiddleware::auth();
         $event_id = $_GET['event_id'] ?? null;
         if (!$event_id) {
             header("Location: /events");
@@ -125,7 +125,7 @@ class CheckoutController {
     }
 
     public function showCustomerDashboard() {
-        AuthMiddleware::auth();
+        \App\Middleware\AuthMiddleware::auth();
         $user_id = $_SESSION['user_id'];
         
         $myOrders = $this->order->getCustomerOrders($user_id);
