@@ -1,7 +1,5 @@
 Simplified Database Schema
 
-We simplify your original schema but keep core logic.
-
 🔹 Users Table
 users
 -----
