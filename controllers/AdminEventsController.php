@@ -11,17 +11,27 @@ class AdminEventsController {
     private $event;
     private $ticket_type;
 
+    private $analytics;
+
     public function __construct() {
-        $database = new Database();
-        $this->db = $database->getConnection();
+        require_once BASE_PATH . '/src/Core/Database.php';
+        require_once BASE_PATH . '/models/Analytics.php';
+        
+        $this->db = \App\Core\Database::getInstance();
         $this->venue = new Venue($this->db);
         $this->event = new Event($this->db);
         $this->ticket_type = new TicketType($this->db);
+        $this->analytics = new Analytics($this->db);
     }
 
     public function createVenue() {
-        AuthController::checkRole(['admin']);
+        \App\Middleware\AuthMiddleware::role(['super_admin', 'admin']);
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            if (!\App\Core\Security::validateCsrfToken($_POST['csrf_token'] ?? '')) {
+                $_SESSION['error'] = "Security validation failed (CSRF).";
+                header("Location: /admin/dashboard");
+                exit();
+            }
             $this->venue->name = $_POST['name'];
             $this->venue->location = $_POST['location'];
             $this->venue->capacity = $_POST['capacity'];
@@ -37,8 +47,13 @@ class AdminEventsController {
     }
 
     public function createEvent() {
-        AuthController::checkRole(['admin']);
+        \App\Middleware\AuthMiddleware::role(['super_admin', 'admin']);
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            if (!\App\Core\Security::validateCsrfToken($_POST['csrf_token'] ?? '')) {
+                $_SESSION['error'] = "Security validation failed (CSRF).";
+                header("Location: /admin/dashboard");
+                exit();
+            }
             $this->event->title = $_POST['title'];
             $this->event->venue_id = $_POST['venue_id'];
             $this->event->event_date = $_POST['event_date'];
@@ -65,9 +80,15 @@ class AdminEventsController {
     }
 
     public function dashboard() {
-        AuthController::checkRole(['admin']);
+        \App\Middleware\AuthMiddleware::role(['super_admin', 'admin']);
+        
         $venues = $this->venue->readAll();
         $events = $this->event->readAll();
+        
+        // Fetch Analytics
+        $stats = $this->analytics->getKPIs();
+        $occupancy = $this->analytics->getEventOccupancy();
+        $activities = $this->analytics->getRecentActivity(8);
         
         include BASE_PATH . '/views/layout/header.php';
         include BASE_PATH . '/views/admin/dashboard.php';
